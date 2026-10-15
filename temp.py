@@ -1,3 +1,15 @@
+"""
+AtCoder用テンプレート
+Repository:
+https://github.com/tanukineiri31514/My_AtCoder_Templates
+
+各種ライブラリ:
+SegmentTree, LazySegmentTree:
+https://github.com/tanukineiri31514/My_AtCoder_Templates/blob/main/SEG.py
+UnionFind:
+https://github.com/tanukineiri31514/My_AtCoder_Templates/blob/main/UF.py
+"""
+
 import sys
 import heapq # 優先度付きキュー
 from bisect import bisect_left, bisect_right
