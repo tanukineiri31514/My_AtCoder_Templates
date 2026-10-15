@@ -4,10 +4,15 @@ Repository:
 https://github.com/tanukineiri31514/My_AtCoder_Templates
 
 各種ライブラリ:
+MainTemplates:
+https://github.com/tanukineiri31514/My_AtCoder_Templates/blob/main/temp.py
+
 SegmentTree, LazySegmentTree:
 https://github.com/tanukineiri31514/My_AtCoder_Templates/blob/main/SEG.py
+
 UnionFind:
 https://github.com/tanukineiri31514/My_AtCoder_Templates/blob/main/UF.py
+
 """
 
 import sys
@@ -16,7 +21,7 @@ from bisect import bisect_left, bisect_right
 from collections import deque
 from itertools import combinations
 from itertools import permutations
-from math import gcd,lcm
+from math import*
 def input():return sys.stdin.readline().strip()
 heap = heapq.heapify
 push = heapq.heappush
