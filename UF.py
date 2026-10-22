@@ -29,9 +29,4 @@ class UF:
         uf.find(x)          # xの根を取得
         uf.union(x, y)      # xとyを連結
         uf.get_size(x)      # xが属する集合のサイズ
-
-        uf = UF(n)
-        uf.union(a, b)       # aとbをつなぐ
-        uf.find(a)           # aの根を調べる
-        uf.get_size(a)       # aが属するグループのサイズ
     """
