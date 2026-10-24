@@ -13,6 +13,8 @@ https://github.com/tanukineiri31514/My_AtCoder_Templates/blob/main/SEG.py
 UnionFind:
 https://github.com/tanukineiri31514/My_AtCoder_Templates/blob/main/UF.py
 
+Gitの更新を忘れて少し異なる場合があります
+
 """
 
 import sys
@@ -98,7 +100,7 @@ def contdic(l):
 enu = enumerate
 combi = combinations
 permi = permutations
-def dic_sort_v(l) :return sorted(l.items(), key = lambda A : A[1])
+def dic_sort_v(l) :return sorted(l.items(), key = lambda A : A[1])\]}\]_}}
 def _deque():
     """ this fanc in deque template"""
     # from collections import deque
