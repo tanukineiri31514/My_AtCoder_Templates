@@ -13,6 +13,9 @@ https://github.com/tanukineiri31514/My_AtCoder_Templates/blob/main/SEG.py
 UnionFind:
 https://github.com/tanukineiri31514/My_AtCoder_Templates/blob/main/UF.py
 
+BFS:
+https://github.com/tanukineiri31514/My_AtCoder_Templates/blob/main/bfs.py
+
 Gitの更新を忘れて少し異なる場合があります
 
 """
@@ -92,15 +95,13 @@ def get_v(d:dict):return d.values()
 def contdic(l):
   d = {}
   for i in l:
-    if i not in d:
-      d[i] = 1
-    else:
-      d[i] += 1
+    if i not in d:d[i] = 1
+    else:d[i] += 1
   return d
 enu = enumerate
 combi = combinations
 permi = permutations
-def dic_sort_v(l) :return sorted(l.items(), key = lambda A : A[1])\]}\]_}}
+def dic_sort_v(l) :return sorted(l.items(), key = lambda A : A[1])
 def _deque():
     """ this fanc in deque template"""
     # from collections import deque
