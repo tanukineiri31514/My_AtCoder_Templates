@@ -26,8 +26,11 @@ from bisect import bisect_left, bisect_right
 from collections import deque
 from itertools import combinations
 from itertools import permutations
+import functools
+memofunc = functools.cache
 from math import*
 def input():return sys.stdin.readline().strip()
+sys.setrecursionlimit(10**9)
 heap = heapq.heapify
 push = heapq.heappush
 pop = heapq.heappop
@@ -130,6 +133,18 @@ def _heap():
     push(_,X)
     num = pop(_)
 
+def mgraf(N,M,Indexed=1,Directions=False,Wights=False):
+    g = [[] for _ in range(N+Indexed)]
+    for _ in range(M):
+        if Wights:
+           u,v,w = mint()
+        else:
+            u,v = mint()
+        g[u].append((w,v) if Wights else v)
+        if Directions:
+            g[v].append((w,u) if Wights else u)
+    return g
+
 """
 bit temp
 
@@ -144,3 +159,4 @@ for bit in range(1<<n):
 memo
 
 """
+
