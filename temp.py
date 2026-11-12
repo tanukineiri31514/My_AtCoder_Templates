@@ -51,8 +51,6 @@ def mstr():return map(str,input().split())
 def bsl(l,n):return bisect_left(l,n)# n以上の要素数
 def bsr(l,n):return bisect_right(l,n) # n以下の要素数
 def bs(l,n):return (bisect_left(l,n),bisect_right(l,n)) # 二分探索
-def manhat(T1,T2):return sum(abs(a-b) for a,b in zip(T1,T2))
-def ugread(T1,T2):return dist(T1,T2)
 def sort(l):return list(sorted(l))
 def ps(a:list): #累積和
     s = [0]
@@ -91,7 +89,6 @@ def rle(s): # ランレングス圧縮
 def rotate(l,c=1): # 90度回転
     for i in range(c%4):l = [list(row) for row in zip(*l[::-1])]
     return l
-def ncr(n, r):return comb(n, r)
 def get_kv(d:dict):return d.items()
 def get_k(d:dict):return d.keys()
 def get_v(d:dict):return d.values()
@@ -125,14 +122,12 @@ def cc(l,mapping=True): # 座圧
     return n
   else:
     return ls
-
 def _heap():
     _ = []
     X = int()
     heap(_)
     push(_,X)
     num = pop(_)
-
 def mgraf(N,M,Indexed=1,Directions=False,Wights=False):
     g = [[] for _ in range(N+Indexed)]
     for _ in range(M):
