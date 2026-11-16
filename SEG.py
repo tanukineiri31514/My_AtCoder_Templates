@@ -1,59 +1,253 @@
-class F:
-    # 基本演算
-    Add = staticmethod(lambda a,b: a+b)
-    Mul = staticmethod(lambda a,b: a*b)
-    Xor = staticmethod(lambda a,b: a^b)
-    And = staticmethod(lambda a,b: a&b)
-    Or = staticmethod(lambda a,b: a|b)
 
-    # 文字列    # 文字列連結（左から順番に連結）
-    # e = ""
-    Concat = staticmethod(lambda a,b: a+b)
+class LSeg:
+    def __init__(self, A, op, e, mapping, composition, id_):
+        self._op = op
+        self._e = e
+        self._mapping = mapping
+        self._composition = composition
+        self._id = id_
 
-    # 集合
-    # Union: 2つの集合の和集合（どちらかに含まれる要素）
-    # e = set()
-    Union = staticmethod(lambda a,b: a|b)
+        if isinstance(A, int):
+            A = [e] * A
 
-    # Inter: 2つの集合の積集合（両方に含まれる要素）
-    # e = 全要素を含む集合
-    Inter = staticmethod(lambda a,b: a&b)
+        self.N = len(A)
+        self._log = (self.N - 1).bit_length()
+        self.size = 1 << self._log
+        self.tree = [e] * (2 * self.size)
+        self._lz = [id_] * self.size
 
-    # 辞書のマージ（同じキーがあれば右側の値を優先）
-    # e = {}
-    Merge = staticmethod(lambda a,b: a|b)
+        for i in range(self.N):
+            self.tree[self.size + i] = A[i]
 
-    # 最大値とその出現回数を管理
-    # a,b = (最大値, 個数)
-    # e = (-INF, 0)
-    @staticmethod
-    def MaxCount(a, b):
-        if a[0] > b[0]: return a
-        if a[0] < b[0]: return b
-        return (a[0], a[1]+b[1])
+        for i in range(self.size - 1, 0, -1):
+            self._update(i)
 
-    # 最小値とその出現回数を管理
-    # a,b = (最小値, 個数)
-    # e = (INF, 0)
-    @staticmethod
-    def MinCount(a, b):
-        if a[0] < b[0]: return a
-        if a[0] > b[0]: return b
-        return (a[0], a[1]+b[1])
+    # A[i] = x
+    def update(self, i, x):
+        assert 0 <= i < self.N
+        i += self.size
+        for j in range(self._log, 0, -1):
+            self._push(i >> j)
+        self.tree[i] = x
+        for j in range(1, self._log + 1):
+            self._update(i >> j)
 
-    # 合計と要素数を同時に管理
-    # a,b = (合計, 要素数)
-    # e = (0, 0)
-    @staticmethod
-    def SumCount(a, b):
-        return (a[0]+b[0], a[1]+b[1])
+    # A[i] += x（数値を扱う場合）
+    def add(self, i, x):
+        self.update(i, self.get(i) + x)
 
-    # 区間の最小値と最大値を同時に管理
-    # a,b = (最小値, 最大値)
-    # e = (INF, -INF)
-    @staticmethod
-    def MinMax(a, b):
-        return (min(a[0],b[0]), max(a[1],b[1]))
+    # A[i] を取得
+    def get(self, i):
+        assert 0 <= i < self.N
+        i += self.size
+        for j in range(self._log, 0, -1):
+            self._push(i >> j)
+        return self.tree[i]
+
+    # [l, r) の結果
+    def query(self, l, r):
+        assert 0 <= l <= r <= self.N
+        if l == r:
+            return self._e
+
+        l += self.size
+        r += self.size
+
+        for i in range(self._log, 0, -1):
+            if ((l >> i) << i) != l:
+                self._push(l >> i)
+            if ((r >> i) << i) != r:
+                self._push((r - 1) >> i)
+
+        left = self._e
+        right = self._e
+
+        while l < r:
+            if l & 1:
+                left = self._op(left, self.tree[l])
+                l += 1
+            if r & 1:
+                r -= 1
+                right = self._op(self.tree[r], right)
+            l >>= 1
+            r >>= 1
+
+        return self._op(left, right)
+
+    # 全体の結果
+    def all(self):
+        return self.tree[1]
+
+    # 配列を表示
+    def print(self):
+        print(self.list_seg())
+
+    # 配列を取得
+    def list_seg(self):
+        return [self.get(i) for i in range(self.N)]
+
+    # 木の中身を表示
+    def print_tree(self):
+        print(self.tree)
+
+    # 木の中身を取得
+    def list_seg_tree(self):
+        return self.tree.copy()
+
+    # [l, r) に操作 f を適用
+    def apply(self, l, r, f):
+        assert 0 <= l <= r <= self.N
+        if l == r:
+            return
+
+        l += self.size
+        r += self.size
+
+        for i in range(self._log, 0, -1):
+            if ((l >> i) << i) != l:
+                self._push(l >> i)
+            if ((r >> i) << i) != r:
+                self._push((r - 1) >> i)
+
+        l2, r2 = l, r
+
+        while l < r:
+            if l & 1:
+                self._all_apply(l, f)
+                l += 1
+            if r & 1:
+                r -= 1
+                self._all_apply(r, f)
+            l >>= 1
+            r >>= 1
+
+        l, r = l2, r2
+
+        for i in range(1, self._log + 1):
+            if ((l >> i) << i) != l:
+                self._update(l >> i)
+            if ((r >> i) << i) != r:
+                self._update((r - 1) >> i)
+
+    # 左端 l を固定して条件を満たす最大の右端
+    def max_right(self, l, f):
+        assert 0 <= l <= self.N
+        assert f(self._e)
+
+        if l == self.N:
+            return self.N
+
+        l += self.size
+        for i in range(self._log, 0, -1):
+            self._push(l >> i)
+
+        sm = self._e
+        first = True
+
+        while first or (l & -l) != l:
+            first = False
+            while l % 2 == 0:
+                l >>= 1
+
+            if not f(self._op(sm, self.tree[l])):
+                while l < self.size:
+                    self._push(l)
+                    l *= 2
+                    if f(self._op(sm, self.tree[l])):
+                        sm = self._op(sm, self.tree[l])
+                        l += 1
+                return l - self.size
+
+            sm = self._op(sm, self.tree[l])
+            l += 1
+
+        return self.N
+
+    # 右端 r を固定して条件を満たす最小の左端
+    def min_left(self, r, f):
+        assert 0 <= r <= self.N
+        assert f(self._e)
+
+        if r == 0:
+            return 0
+
+        r += self.size
+        for i in range(self._log, 0, -1):
+            self._push((r - 1) >> i)
+
+        sm = self._e
+        first = True
+
+        while first or (r & -r) != r:
+            first = False
+            r -= 1
+            while r > 1 and r % 2:
+                r >>= 1
+
+            if not f(self._op(self.tree[r], sm)):
+                while r < self.size:
+                    self._push(r)
+                    r = 2 * r + 1
+                    if f(self._op(self.tree[r], sm)):
+                        sm = self._op(self.tree[r], sm)
+                        r -= 1
+                return r + 1 - self.size
+
+            sm = self._op(self.tree[r], sm)
+
+        return 0
+
+    def _update(self, k):
+        self.tree[k] = self._op(
+            self.tree[2 * k],
+            self.tree[2 * k + 1]
+        )
+
+    def _all_apply(self, k, f):
+        self.tree[k] = self._mapping(f, self.tree[k])
+        if k < self.size:
+            self._lz[k] = self._composition(f, self._lz[k])
+
+    def _push(self, k):
+        self._all_apply(2 * k, self._lz[k])
+        self._all_apply(2 * k + 1, self._lz[k])
+        self._lz[k] = self._id
+
+
+"""
+LSeg(A, op, e, mapping, composition, id_)
+
+op(a,b)           : 区間情報の結合
+e                 : opの単位元
+mapping(f,x)      : xに操作fを適用
+composition(f,g)  : gの後にfを適用
+id_               : 何もしない操作
+
+update(i,x)       : 1点代入
+add(i,x)          : 1点加算（数値用）
+get(i)            : 1点取得
+query(l,r)        : 区間取得
+all()             : 全体取得
+apply(l,r,f)      : 区間更新
+max_right(l,f)    : 条件を満たす最大の右端
+min_left(r,f)     : 条件を満たす最小の左端
+print()           : 配列表示
+list_seg()        : 配列取得
+print_tree()      : 木の内部表示
+list_seg_tree()   : 木の内部配列取得
+
+# 区間加算 + 区間最小値
+# op = min
+# e = INF
+# mapping = lambda f,x: x+f
+# composition = lambda f,g: f+g
+# id_ = 0
+
+※ 区間は[l,r)
+※ mapping等は操作に応じて変更
+※ max_right/min_leftは判定の単調性が必要
+"""
+
 
 class Seg:
     def __init__(self, A, func, e):
@@ -94,7 +288,7 @@ class Seg:
     # A[k] を取得
     def get(self, i):
         return self.tree[self.size + i]
-        
+
     # [l, r) の結果
     def query(self, l, r):
         left = self.e
@@ -121,142 +315,78 @@ class Seg:
     # 表示
     def print(self):
         print([self.get(i) for i in range(self.N)])
-    
+
     def list_seg(self):
         return[self.get(i) for i in range(self.N)]
 
     # 木の中身を見る
     def print_tree(self):
         print(self.tree)
-    
+
     def list_seg_tree(self):
         return(self.tree)
-"""
 
-Seg(list,式,初期値) -> 初期化
-(min,max,lambda a,b:a+b)
-seg.update(ind,X) -> 数値の変更
-seg.add(i,X) -> 数値の加算
-seg.get(i) -> l[i]の値の取得
-seg.query(l,r) l以上r未満の範囲の結果
-seg.all() -> 全体の結果
-seg.print() -> リストの中の表示
-seg.print_tree() -> 木の構造の表示
-"""
+    # [追加] 左端lを固定して条件を満たす最大の右端を取得
+    # f(query(l,r)) == True となる最大のr
+    # O(logN)
+    def max_right(self, l, f):
+        assert 0 <= l <= self.N
+        assert f(self.e)
 
+        if l == self.N:
+            return self.N
 
-class LSeg:
-    """
-    init(init_val, ide_ele): 配列init_valで初期化 O(N)
-    add(l, r, x): 区間[l, r)にxを加算 O(logN)
-    query(l, r): 区間[l, r)をsegfuncしたものを返す O(logN)
-    """
-    def __init__(self, init_val, segfunc, ide_ele):
-        """
-        init_val: 配列の初期値
-        segfunc: 区間にしたい操作
-        ide_ele: 単位元
-        num: n以上の最小の2のべき乗
-        data: 値配列(1-index)
-        lazy: 遅延配列(1-index)
-        """
-        n = len(init_val)
-        self.segfunc = segfunc
-        self.ide_ele = ide_ele
-        self.num = 1 << (n - 1).bit_length()
-        self.data = [ide_ele] * 2 * self.num
-        self.lazy = [0] * 2 * self.num
-        # 配列の値を葉にセット
-        for i in range(n):
-            self.data[self.num + i] = init_val[i]
-        # 構築していく
-        for i in range(self.num - 1, 0, -1):
-            self.data[i] = self.segfunc(self.data[2 * i], self.data[2 * i + 1])
+        l += self.size
+        sm = self.e
 
-    def prop(self, *ids):
-        """
-        遅延伝搬処理
-        ids: 伝搬する対象の区間 
-        """
-        for i in reversed(ids):
-            v = self.lazy[i]
-            if not v:
-                continue
-            self.lazy[2 * i] += v
-            self.lazy[2 * i + 1] += v
-            self.data[2 * i] += v
-            self.data[2 * i + 1] += v
-            self.lazy[i] = 0
+        first = True
+        while first or (l & -l) != l:
+            first = False
+            while l % 2 == 0:
+                l >>= 1
 
-    def add(self, l, r, x):
-        """
-        区間[l, r)の値にxを加算
-        l, r: index(0-index)
-        x: additional value
-        """
-        *ids, = self._gindex(l, r)
-        l += self.num
-        r += self.num
-        while l < r:
-            if l & 1:
-                self.lazy[l] += x
-                self.data[l] += x
-                l += 1
-            if r & 1:
-                self.lazy[r - 1] += x
-                self.data[r - 1] += x
-            r >>= 1
-            l >>= 1
-        for i in ids:
-            self.data[i] = self.segfunc(self.data[2 * i], self.data[2 * i + 1]) + self.lazy[i]
+            if not f(self.func(sm, self.tree[l])):
+                while l < self.size:
+                    l *= 2
+                    if f(self.func(sm, self.tree[l])):
+                        sm = self.func(sm, self.tree[l])
+                        l += 1
+                return l - self.size
 
+            sm = self.func(sm, self.tree[l])
+            l += 1
 
-    def query(self, l, r):
-        """
-        [l, r)のsegfuncしたものを得る
-        l: index(0-index)
-        r: index(0-index)
-        """
-        *ids, = self._gindex(l, r)
-        self.prop(*ids)
+        return self.N
 
-        res = self.ide_ele
+    # [追加] 右端rを固定して条件を満たす最小の左端を取得
+    # f(query(l,r)) == True となる最小のl
+    # O(logN)
+    def min_left(self, r, f):
+        assert 0 <= r <= self.N
+        assert f(self.e)
 
-        l += self.num
-        r += self.num
-        while l < r:
-            if l & 1:
-                res = self.segfunc(res, self.data[l])
-                l += 1
-            if r & 1:
-                res = self.segfunc(res, self.data[r - 1])
-            l >>= 1
-            r >>= 1
-        return res
+        if r == 0:
+            return 0
 
-    def get(self, i):
-        i += self.num
-        self.prop(*self._gindex(i - self.num, i - self.num + 1))
-        return self.data[i]
-    
-    def _gindex(self, l, r):
-        """
-        伝搬する対象の区間を求める
-        lm: 伝搬する必要のある最大の左閉区間
-        rm: 伝搬する必要のある最大の右開区間
-        """
-        l += self.num
-        r += self.num
-        lm = l >> (l & -l).bit_length()
-        rm = r >> (r & -r).bit_length()
+        r += self.size
+        sm = self.e
 
-        while r > l:
-            if l <= lm:
-                yield l
-            if r <= rm:
-                yield r
-            r >>= 1
-            l >>= 1
-        while l:
-            yield l
-            l >>= 1
+        first = True
+        while first or (r & -r) != r:
+            first = False
+            r -= 1
+            while r > 1 and r % 2:
+                r >>= 1
+
+            if not f(self.func(self.tree[r], sm)):
+                while r < self.size:
+                    r = 2 * r + 1
+                    if f(self.func(self.tree[r], sm)):
+                        sm = self.func(self.tree[r], sm)
+                        r -= 1
+                return r + 1 - self.size
+
+            sm = self.func(self.tree[r], sm)
+
+        return 0
+
